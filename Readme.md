@@ -1,6 +1,8 @@
 
 # Pyber
-- If Pyber rates are consistent across city types, then the data suggests that the average ride length is shorter in urban cities than suburban cities.
+- The average fare is the greatest in rural cities, but also represents the smallest percentage of total fare, number of rides and number of drivers. If fare rate were lower in rural areas, would ride count increase?
+- Increased ride count is positively correlated with increased driver count.
+- Pyber employs three times as many drivers in urban cities than in suburban and rural cities combined
 
 
 ```python
@@ -179,10 +181,9 @@ ride.head(3)
 
 
 
-### Average Fare Per City
-
 
 ```python
+# calculate average fare per city
 avgFare = ride.groupby("city")["fare"].mean().to_frame("AvgFare")
 avgFare["AvgFare"].nlargest(5)
 ```
@@ -200,10 +201,27 @@ avgFare["AvgFare"].nlargest(5)
 
 
 
-### Total Number of Rides Per City
+
+```python
+cityRide = city.merge(ride)
+avgFareByType = cityRide.groupby("type")["fare"].mean()
+avgFareByType
+```
+
+
+
+
+    type
+    Rural       34.040720
+    Suburban    30.908608
+    Urban       24.663594
+    Name: fare, dtype: float64
+
+
 
 
 ```python
+# calculate total ride per city
 rideCount = ride.groupby("city")["ride_id"].count().to_frame("rideCount")
 rideCount["rideCount"].nlargest(5)
 ```
@@ -292,15 +310,15 @@ summary.head(3)
 
 ```python
 #rename the column for aesthetics in legend
-summary.rename(columns={"type":"City Type"}, inplace=True)
+# summary.rename(columns={"type":"City Type"}, inplace=True)
 
 # apply colors to the unique city types
-categories = np.unique(summary["City Type"])
-# colors = np.linspace(0, 1, len(categories)) #if number of colors unknown, use this to do gray scale
+categories = np.unique(summary["type"])
+# colors = np.linspace(0, 1, len(categories)) #if number of colors unknown, can use this to do gray scale
 colors = ['gold','lightskyblue','lightcoral']
 colordict = dict(zip(categories, colors))  
 
-summary["color"] = summary["City Type"].apply(lambda x: colordict[x])
+summary["color"] = summary["type"].apply(lambda x: colordict[x])
 
 ```
 
@@ -312,40 +330,47 @@ ax.scatter(summary["rideCount"], summary["AvgFare"], s=summary["driver_count"]*1
 handles, labels = ax.get_legend_handles_labels()
 
 plt.title("Urban Cities host majority of Pyber Drivers and Rides")
-plt.xlabel("Ride Count")
-plt.ylabel("Average Fare")
+plt.xlabel("Number of Rides Per City")
+plt.ylabel("Average Fare ($) Per City")
 
 # manually make the legend
 urbanPatch = mpatches.Patch(color=colors[2], label=categories[2])
 subrurbanPatch = mpatches.Patch(color=colors[1], label=categories[1])
 ruralPatch = mpatches.Patch(color=colors[0], label=categories[0])
 plt.legend(handles=[urbanPatch, subrurbanPatch, ruralPatch], frameon=True, loc="upper right")
-
+#add a note regarding the bubble size
+plt.gcf().text(.95, 0.68, "Note:", fontsize=12, )
+plt.gcf().text(.95, 0.65, "Bubble size correlates", fontsize=12)
+plt.gcf().text(.95, 0.62, "with number of drivers", fontsize=12)
 plt.show()
 ```
 
 
-![png](output_13_0.png)
+![png](output_12_0.png)
 
 
 #### % of Total Fares by City Type
 
 
 ```python
-cityRide = city.merge(ride)
 fareTotal = cityRide.groupby("type")["fare"].sum()
 # display in a pie chart - autopct automatically calculates the percentage so we don't have to!
 colors = ['gold','lightskyblue','lightcoral']
-fareTotal.plot(kind="pie", autopct="%1.1f%%", startangle=90, colors=colors, explode=(0,0,.05))
+fareTotal.plot(kind="pie", autopct="%1.1f%%", startangle=160, colors=colors, explode=(0,0,.05))
 plt.axis("equal")
-plt.title("Pyber ")
+plt.title("Majority of Pyber Fares From Urban Cities")
 plt.show()
 
 ```
 
 
-![png](output_15_0.png)
+![png](output_14_0.png)
 
+
+
+```python
+
+```
 
 #### % of Total Rides by City Type
 
